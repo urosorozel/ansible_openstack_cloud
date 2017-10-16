@@ -9,8 +9,6 @@
   - debug: var=item
     with_items: "{{ groups['controller'] | difference([inventory_hostname]) }}"
   
-  #- debug: var=hostvars[inventory_hostname]
-
   - name: Create VXLAN device
     shell: |
        ip link add "{{vxlan_inteface_name}}" type vxlan id "{{vxlan_interface_id}}" dstport "{{vxlan_interface_dstport}}" local "{{hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address']}}" 
@@ -24,9 +22,3 @@
   - name: Online intefaces
     shell: |
        ip link set  dev "{{vxlan_inteface_name}}" up 
-
-  
-#bridge fdb append 00:00:00:00:00:00 dev vxlan100 dst 10.176.129.217
-#bridge fdb append 00:00:00:00:00:00 dev vxlan100 dst 10.176.129.203
-#ip link set dev eth0 mtu 1450
-#ip link set  dev vxlan100 up
