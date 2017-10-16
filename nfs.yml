@@ -1,0 +1,7 @@
+- hosts: nfs
+  vars:
+    nfs_exports: 
+      - "/images *(rw,sync,no_root_squash)" 
+      - "/volumes *(rw,sync,no_root_squash)"
+  roles:
+    - { role: geerlingguy.nfs }

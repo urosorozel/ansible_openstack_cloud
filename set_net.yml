@@ -1,0 +1,22 @@
+---
+- name: Install Ansible prerequisites
+  hosts: controller,nfs
+  gather_facts: false
+  user: root
+  roles: 
+    - ansible-role-rpc_networking
+  tasks:
+    - name: Include network config
+      lineinfile:
+        path: /etc/network/interfaces
+        state: present
+        line: "source /etc/network/interfaces.d/*.cfg"
+        regexp: "^source.*"
+
+    - name: restart networking
+      service:
+        name: networking
+        state: restarted
+
+   
+    - debug: var=hostvars[inventory_hostname]
