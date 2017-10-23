@@ -5,10 +5,10 @@ cidr_networks:
   storage: 172.29.244.0/22
 
 used_ips:
-  - "172.29.236.1,172.29.236.50"
-  - "172.29.240.1,172.29.240.50"
-  - "172.29.244.1,172.29.244.50"
-  - "172.29.248.1,172.29.248.50"
+  - "172.29.236.1,172.29.236.60"
+  - "172.29.240.1,172.29.240.60"
+  - "172.29.244.1,172.29.244.60"
+  - "172.29.248.1,172.29.248.60"
 
 global_overrides:
   internal_lb_vip_address: 172.29.236.9
@@ -228,16 +228,16 @@ metrics_hosts:
     ip: 172.29.236.53
 
 ## nova hypervisors
-#compute_hosts:
-#  compute1:
-#    ip: 172.29.236.16
+compute_hosts:
+  compute1:
+    ip: 172.29.236.54
 #  compute2:
 #    ip: 172.29.236.17
 #
 ## ceilometer compute agent (telemetry)
-#metering-compute_hosts:
-#  compute1:
-#    ip: 172.29.236.16
+metering-compute_hosts:
+  compute1:
+    ip: 172.29.236.54
 #  compute2:
 #    ip: 172.29.236.17
 #

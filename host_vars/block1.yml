@@ -1,0 +1,36 @@
+---
+    rpc_networking:
+        template: interfaces-single.j2
+        vip:
+          interface: vxlan100
+          vlan: 5
+          address: 172.29.232.55
+          netmask: 255.255.252.0
+          mtu: 1450
+        mgmt:
+          interface: vxlan100
+          vlan: 10
+          address: 172.29.236.55
+          netmask: 255.255.252.0
+          mtu: 1450
+        vxlan:
+          interface: vxlan100
+          vlan: 20
+          address: 172.29.240.55
+          netmask: 255.255.252.0
+          mtu: 1450
+        vlan:
+          interface: vxlan100
+          mtu: 1450
+        storage:
+          interface: vxlan100
+          vlan: 30
+          address: 172.29.244.55
+          netmask: 255.255.252.0
+          mtu: 1450
+        swift:
+          interface: vxlan100
+          vlan: 40
+          address: 172.29.248.55
+          netmask: 255.255.252.0
+          mtu: 1450
