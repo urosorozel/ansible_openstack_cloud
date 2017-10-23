@@ -1,0 +1,15 @@
+[infra]
+infra3 ansible_host=
+infra2 ansible_host=
+infra1 ansible_host=
+
+[storage]
+block1 ansible_host=
+
+[compute]
+compute1 ansible_host=
+
+[cloudinfra:children]
+infra
+storage
+compute

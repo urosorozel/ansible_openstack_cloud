@@ -1,9 +1,0 @@
----
-- name: Install Ansible prerequisites
-  hosts: controller,nfs
-  gather_facts: false
-  vars:
-    swapfile_size: 8192MB
-  user: root
-  roles:
-    - kamaln7.swapfile

@@ -1,0 +1,76 @@
+- name: SSH keys
+  hosts: all
+  tasks:
+    - name: Set authorized key for user ubuntu copying it from current user
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+
+- name: Set VXLAN interface 
+  hosts: all
+  vars:
+    vxlan_inteface_name: vxlan100
+    vxlan_interface_id: 100
+    vxlan_interface_dstport: 4789
+    vxlan_interface_mtu: 1450
+  tasks: 
+  - debug: var=item
+    with_items: "{{ groups['cloudinfra'] | difference([inventory_hostname]) }}"
+  
+  - name: Create VXLAN device
+    shell: |
+       ip link add "{{vxlan_inteface_name}}" type vxlan id "{{vxlan_interface_id}}" dstport "{{vxlan_interface_dstport}}" local "{{hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address']}}" 
+       ip link set dev "{{vxlan_inteface_name}}" mtu "{{vxlan_interface_mtu}}"
+
+  - name: Add neighbours to VXLAN
+    shell: |
+       bridge fdb append 00:00:00:00:00:00 dev "{{vxlan_inteface_name}}" dst "{{hostvars[item]['ansible_eth1']['ipv4']['address']}}"
+    with_items: "{{ groups['cloudinfra'] | difference([inventory_hostname]) }}"
+
+  - name: Online intefaces
+    shell: |
+       ip link set  dev "{{vxlan_inteface_name}}" up 
+
+
+- name: Install Ansible prerequisites
+  hosts: all
+  gather_facts: false
+  user: root
+  roles: 
+    - rpc_networking
+  tasks:
+    - name: Include network config
+      lineinfile:
+        path: /etc/network/interfaces
+        state: present
+        line: "source /etc/network/interfaces.d/*.cfg"
+        regexp: "^source.*"
+
+    - name: restart networking
+      service:
+        name: networking
+        state: restarted
+
+    - debug: var=hostvars[inventory_hostname]
+
+
+- name: Install Ansible prerequisites
+  hosts: cloudinfra
+  gather_facts: false
+  vars:
+    swapfile_size: 16384MB
+  user: root
+  roles:
+    - kamaln7.swapfile
+
+
+- name: Install NFS server 
+  hosts: storage
+  vars:
+    nfs_exports: 
+      - "/images *(rw,sync,no_root_squash)" 
+      - "/volumes *(rw,sync,no_root_squash)"
+  roles:
+    - { role: geerlingguy.nfs }
