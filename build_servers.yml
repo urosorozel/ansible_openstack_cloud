@@ -9,7 +9,8 @@
           image: "{{ item.image }}"
           group: "{{ item.group }}"
           meta: "{{ item.meta }}"
-          wait: yes
+          key_name: "{{ item.key_name }}"
+          wait: no
           auto_increment: False
       register: rax
       with_items: "{{ rax_servers }}"

@@ -1,15 +1,38 @@
-- name: SSH keys
-  hosts: all
+- name: Setup infra1
+  hosts: infra1
   tasks:
-    - name: Set authorized key for user ubuntu copying it from current user
+    - name: Get Openstack ansible from git
+      git:
+        repo: https://github.com/openstack/openstack-ansible.git
+        dest: /opt/openstack-ansible
+        version: "{{ openstack_ansible_version }}"
+    
+    - name: Boostrap ansible
+      shell: |
+        ./scripts/bootstrap-ansible.sh
+      args: 
+        chdir: /opt/openstack-ansible
+        creates: /etc/openstack_deploy
+
+    - name: Get SSH pub file
+      slurp:
+        src: ~/.ssh/id_rsa.pub
+      register: ssh_pub
+
+
+- name: SSH keys
+  hosts: cloudinfra
+  tasks:
+
+    - name: Set authorized key for user root  copying it from ssh_pub var
       authorized_key:
         user: root
         state: present
-        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+        key: "{{ hostvars.infra1.ssh_pub.content  | b64decode  }}"
 
 
 - name: Set VXLAN interface 
-  hosts: all
+  hosts: cloudinfra
   vars:
     vxlan_inteface_name: vxlan100
     vxlan_interface_id: 100
@@ -35,7 +58,7 @@
 
 
 - name: Install Ansible prerequisites
-  hosts: all
+  hosts: cloudinfra
   gather_facts: false
   user: root
   roles: 
@@ -74,3 +97,45 @@
       - "/volumes *(rw,sync,no_root_squash)"
   roles:
     - { role: geerlingguy.nfs }
+
+- name: Openstack Setup hosts
+  hosts: infra1
+  tasks:
+    - name: Copy Openstack ansible config to infra1
+      copy:
+        src: etc/openstack_deploy/{{ item }}
+        dest: /etc/openstack_deploy/
+      with_items:
+        - openstack_user_config.yml
+        - user_variables.yml 
+
+    - name: Copy user_secrets.yml
+      shell: |
+        cp  /opt/openstack-ansible/etc/openstack_deploy/user_secrets.yml /etc/openstack_deploy/
+      args:
+        creates: /etc/openstack_deploy/user_secrets.yml
+
+    - name: Generate secrets
+      shell: |
+        ./scripts/pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
+      args:
+        creates: /etc/openstack_deploy/user_secrets.yml.tar
+        chdir: /opt/openstack-ansible 
+
+    - name: Setup hosts playbook run
+      shell: |
+        openstack-ansible setup-hosts.yml --skip-tags security
+      args:
+        chdir: /opt/openstack-ansible/playbooks
+
+    - name: Setup infrastructure playbook run
+      shell: |
+        openstack-ansible setup-infrastructure.yml
+      args:
+        chdir: /opt/openstack-ansible/playbooks
+
+    - name: Setup openstack playbook run
+      shell: |
+        openstack-ansible setup-openstack.yml
+      args:
+        chdir: /opt/openstack-ansible/playbooks
