@@ -1,0 +1,41 @@
+rax_servers:
+  - name: infra1
+    flavor: general1-8
+    image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
+    ssh_key: Uros_4k
+    group: infra
+    meta:
+      groups: cloudinfra
+
+  - name: infra2
+    flavor: general1-8
+    image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
+    ssh_key: Uros_4k
+    group: infra
+    meta:
+      groups: cloudinfra
+
+  - name: infra3
+    groups: cloudinfra
+    flavor: general1-8
+    image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
+    ssh_key: Uros_4k
+    group: infra
+    meta:
+      groups: cloudinfra
+
+  - name: compute1
+    flavor: general1-8
+    image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
+    ssh_key: Uros_4k
+    group: infra
+    meta:
+      groups: cloudinfra
+
+  - name: block1
+    flavor: general1-8
+    image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
+    ssh_key: Uros_4k
+    group: infra
+    meta:
+      groups: cloudinfra

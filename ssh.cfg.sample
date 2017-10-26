@@ -1,0 +1,13 @@
+Host 10.10.*.*
+  ProxyCommand ssh -W %h:%p bastion
+  IdentityFile ~/.ssh/id_rsa
+  User root
+
+Host bastion
+        Hostname [ip_address]
+        IdentityFile ~/.ssh/id_rsa
+        User root
+        ControlMaster auto
+        ControlPath ~/.ssh/ansible-%r@%h:%p
+        ControlPersist 5m
+

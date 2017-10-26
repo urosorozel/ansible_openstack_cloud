@@ -1,0 +1,15 @@
+- name: Build servers
+  hosts: localhost
+  tasks:
+    - name: Provision instances
+      local_action:
+          module: rax
+          name: "{{ item.name }}"
+          flavor: "{{ item.flavor }}"
+          image: "{{ item.image }}"
+          group: "{{ item.group }}"
+          meta: "{{ item.meta }}"
+          wait: yes
+          auto_increment: False
+      register: rax
+      with_items: "{{ rax_servers }}"
