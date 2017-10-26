@@ -14,6 +14,16 @@
         chdir: /opt/openstack-ansible
         creates: /etc/openstack_deploy
 
+    - name: Configure OSA logging in ansible.cfg
+      ini_file:
+        dest: /opt/openstack-ansible/playbooks/ansible.cfg
+        section: defaults
+        option: log_path
+        value: /root/deploy_ansible.log
+        backup: yes
+        state: present
+      tags: ansible_log
+ 
     - name: Get SSH pub file
       slurp:
         src: ~/.ssh/id_rsa.pub
@@ -56,6 +66,12 @@
     shell: |
        ip link set  dev "{{vxlan_inteface_name}}" up 
 
+- name: Set L2 interface for flat network on compute node
+  shell: |
+    ip link add br-vlan-veth type veth peer name flat-nic
+    ip link set br-vlan-veth up
+    ip link set flat-nic  up
+    brctl addif br-vlan br-vlan-veth
 
 - name: Install Ansible prerequisites
   hosts: cloudinfra
@@ -98,6 +114,16 @@
   roles:
     - { role: geerlingguy.nfs }
 
+  tasks:
+    - name: Fix persmissions to cinder glance uid gid
+      file:
+        path: "{{ item }}"
+        group: 999
+        owner: 999
+      with_items:
+        - /images
+        - /volumes
+ 
 - name: Openstack Setup hosts
   hosts: infra1
   tasks:

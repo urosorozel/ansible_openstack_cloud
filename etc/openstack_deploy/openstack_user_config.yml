@@ -41,7 +41,7 @@ global_overrides:
         container_bridge: "br-vlan"
         container_type: "veth"
         container_interface: "eth12"
-        host_bind_override: "eth12"
+        host_bind_override: "flat-nic"
         type: "flat"
         net_name: "flat"
         group_binds:
@@ -259,7 +259,7 @@ storage_hosts:
           nfs_shares_config: /etc/cinder/nfs_shares
           shares:
             - ip: "172.29.244.55"
-              share: "/vol/cinder"
+              share: "/volumes"
   infra2:
     ip: 172.29.236.52
     container_vars:
@@ -272,7 +272,7 @@ storage_hosts:
           nfs_shares_config: /etc/cinder/nfs_shares
           shares:
             - ip: "172.29.244.55"
-              share: "/vol/cinder"
+              share: "/volumes"
   infra3:
     ip: 172.29.236.53
     container_vars:
@@ -285,4 +285,4 @@ storage_hosts:
           nfs_shares_config: /etc/cinder/nfs_shares
           shares:
             - ip: "172.29.244.55"
-              share: "/vol/cinder"
+              share: "/volumes"
