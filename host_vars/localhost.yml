@@ -1,34 +1,52 @@
 rax_servers:
   - name: infra1
-    flavor: general1-8
+    flavor: performance1-8 
     image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
     key_name: Uros_4k
     group: infra
+    volumes:
+      - name: infra1_container_volume
+        desc: "OS infra container volume"
+        size: 75
+        type: "SATA"
+        device: /dev/xvdb
     meta:
       groups: cloudinfra
 
   - name: infra2
-    flavor: general1-8
+    flavor: performance1-8
     image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
     key_name: Uros_4k
     group: infra
     meta:
       groups: cloudinfra
+    volumes:
+      - name: infra2_container_volume
+        desc: "OS infra container volume"
+        size: 75
+        type: "SATA"
+        device: /dev/xvdb
 
   - name: infra3
     groups: cloudinfra
-    flavor: general1-8
+    flavor: performance1-8
     image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
     key_name: Uros_4k
     group: infra
     meta:
       groups: cloudinfra
+    volumes:
+      - name: infra3_container_volume
+        desc: "OS infra container volume"
+        size: 75
+        type: "SATA"
+        device: /dev/xvdb
 
   - name: compute1
     flavor: general1-8
     image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
     key_name: Uros_4k
-    group: infra
+    group: compute
     meta:
       groups: cloudinfra
 
@@ -36,6 +54,7 @@ rax_servers:
     flavor: general1-8
     image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
     key_name: Uros_4k
-    group: infra
+    group: storage
     meta:
       groups: cloudinfra
+

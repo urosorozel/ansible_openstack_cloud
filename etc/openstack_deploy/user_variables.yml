@@ -173,3 +173,10 @@ lxc_container_default_mtu: 1400
 nova_service_negate:
   - "nova-agent.service"
   - "nova-resetnetwork.service"
+
+# For testing purposes as we use nested vxlans we need to lower MTU
+neutron_ml2_conf_ini_overrides:
+  global_physnet_mtu: 1300
+
+# Install tempest
+tempest_install: True

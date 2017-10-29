@@ -66,13 +66,6 @@
     shell: |
        ip link set  dev "{{vxlan_inteface_name}}" up 
 
-- name: Set L2 interface for flat network on compute node
-  shell: |
-    ip link add br-vlan-veth type veth peer name flat-nic
-    ip link set br-vlan-veth up
-    ip link set flat-nic  up
-    brctl addif br-vlan br-vlan-veth
-
 - name: Install Ansible prerequisites
   hosts: cloudinfra
   gather_facts: false
@@ -94,11 +87,20 @@
 
     - debug: var=hostvars[inventory_hostname]
 
+- name: Set L2 interface for flat network on compute node
+  hosts: compute
+  tasks:
+    - shell: |
+        ip link add br-vlan-veth type veth peer name flat-nic
+        ip link set br-vlan-veth up
+        ip link set flat-nic  up
+        brctl addif br-vlan br-vlan-veth
 
 - name: Install Ansible prerequisites
   hosts: cloudinfra
   gather_facts: false
   vars:
+    swapfile_location: /openstack/swapfile
     swapfile_size: 16384MB
   user: root
   roles:
@@ -115,14 +117,46 @@
     - { role: geerlingguy.nfs }
 
   tasks:
-    - name: Fix persmissions to cinder glance uid gid
+    - name: Fix persmissions to glance uid gid
       file:
-        path: "{{ item }}"
+        path: /images
         group: 999
         owner: 999
-      with_items:
-        - /images
-        - /volumes
+
+    - name: Fix persmissions to cinder uid gid
+      file:
+        path: /volumes
+        group: 998
+        owner: 998
+
+- name: Create filesystem 
+  hosts: infra
+  tags: volumes
+  tasks:
+    - filesystem:
+        fstype: xfs
+        dev: /dev/xvdb
+
+    - name: Mount up device
+      mount:
+        path: /openstack
+        src: /dev/xvdb
+        fstype: xfs
+        state: mounted
+
+    #- name: Create LXC dir for bind mount
+    #  file:
+    #    path: /openstack/lxc
+    #    state: directory
+    #    mode: 0755
+
+    - name: Mount bind 
+      mount:
+        path: /var/lib/lxc
+        src: /openstack/lxc
+        fstype: none
+        opts: bind
+        state: mounted
  
 - name: Openstack Setup hosts
   hosts: infra1
@@ -165,3 +199,32 @@
         openstack-ansible setup-openstack.yml
       args:
         chdir: /opt/openstack-ansible/playbooks
+
+
+    - name: Add rule for horizon
+      iptables:
+        chain: FORWARD
+        out_interface: br-vip
+        in_interface: eth0
+        destination_port: 443
+        protocol: tcp
+        ctstate: NEW
+        jump: ACCEPT
+
+    - name: Add rule for horizon
+      iptables:
+        chain: FORWARD
+        out_interface: br-vip
+        in_interface: eth0
+        ctstate: ESTABLISHED,RELATED
+        jump: ACCEPT
+
+    - name: Add rule for horizon
+      iptables:
+        table: nat
+        chain: PREROUTING
+        in_interface: eth0
+        destination_port: 443
+        protocol: tcp
+        to_destination: 172.29.232.55
+        jump: DNAT

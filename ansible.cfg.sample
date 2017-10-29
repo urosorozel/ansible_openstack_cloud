@@ -1,4 +1,6 @@
 [defaults]
+inventory = inventory
+inventory_ignore_extensions = .sample
 host_key_checking = False
 # Mac work arround 
 callback_whitelist = profile_tasks

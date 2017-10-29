@@ -14,3 +14,38 @@
           auto_increment: False
       register: rax
       with_items: "{{ rax_servers }}"
+      tags: servers
+
+    - name: Register ids
+      set_fact:
+        "{{item.success[0].name }}_id": "{{item.success[0].id }}"
+      with_items:
+        - "{{ rax.results }}"
+ 
+    - name: Storage volume create request
+      local_action:
+        module: rax_cbs
+        name: "{{ item.1.name }}"
+        description: "{{ item.1.desc }}"
+        volume_type: "{{ item.1.type }}"
+        size: "{{ item.1.size }}"
+        wait: yes
+        state: present
+      register: my_volume
+      with_subelements:
+        - "{{ rax_servers }}"
+        - volumes
+        - skip_missing: True
+      tags: volumes
+
+    - name: Storage volume attach request
+      local_action:
+        module: rax_cbs_attachments
+        volume: "{{ item.volume.id }}"
+        server: "{{ item.item[0].name }}"
+        device: "{{ item.item[1].device }}"
+        wait: yes
+        state: present
+      with_items:
+        - "{{ my_volume.results }}"
+ 
