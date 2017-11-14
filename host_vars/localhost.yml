@@ -1,6 +1,6 @@
 rax_servers:
   - name: infra1
-    flavor: performance1-8 
+    flavor: io1-15
     image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
     key_name: Uros_4k
     group: infra
@@ -14,7 +14,7 @@ rax_servers:
       groups: cloudinfra
 
   - name: infra2
-    flavor: performance1-8
+    flavor: io1-15
     image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
     key_name: Uros_4k
     group: infra
@@ -29,7 +29,7 @@ rax_servers:
 
   - name: infra3
     groups: cloudinfra
-    flavor: performance1-8
+    flavor: io1-15
     image: 0401bbaf-ea2c-4863-b6fc-001b48f3cb3c
     key_name: Uros_4k
     group: infra

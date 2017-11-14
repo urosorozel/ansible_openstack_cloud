@@ -1,3 +1,83 @@
+- name: Create filesystem
+  hosts: infra
+  tags: volumes
+  tasks:
+    - filesystem:
+        fstype: ext4
+        #force: yes
+        dev: /dev/xvdb
+
+    - name: Mount up device
+      mount:
+        path: /openstack
+        src: /dev/xvdb
+        fstype: ext4
+        state: mounted
+
+    #- name: Create LXC dir for bind mount
+    #  file:
+    #    path: /openstack/lxc
+    #    state: directory
+    #    mode: 0755
+
+    #- name: Mount bind
+    #  mount:
+    #    path: /var/lib/lxc
+    #    src: /openstack/lxc
+    #    fstype: none
+    #    opts: bind
+    #    state: mounted
+
+- name: Set VXLAN interface
+  hosts: cloudinfra
+  vars:
+    vxlan_inteface_name: vxlan100
+    vxlan_interface_id: 100
+    vxlan_interface_dstport: 4789
+    vxlan_interface_mtu: 1450
+  tags:
+    - vxlan
+  tasks:
+  - debug: var=item
+    with_items: "{{ groups['cloudinfra'] | difference([inventory_hostname]) }}"
+
+  - name: Create VXLAN device
+    shell: |
+       ip link add "{{vxlan_inteface_name}}" type vxlan id "{{vxlan_interface_id}}" dstport "{{vxlan_interface_dstport}}" local "{{hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address']}}" nolearning
+       ip link set dev "{{vxlan_inteface_name}}" mtu "{{vxlan_interface_mtu}}"
+
+  - name: Add neighbours to VXLAN
+    shell: |
+       bridge fdb append 00:00:00:00:00:00 dev "{{vxlan_inteface_name}}" dst "{{hostvars[item]['ansible_eth1']['ipv4']['address']}}"
+       bridge fdb append "{{hostvars[item]['ansible_eth1']['macaddress']}}" dev "{{vxlan_inteface_name}}" dst "{{hostvars[item]['ansible_eth1']['ipv4']['address']}}"
+    with_items: "{{ groups['cloudinfra'] | difference([inventory_hostname]) }}"
+
+  - name: Online intefaces
+    shell: |
+       ip link set  dev "{{vxlan_inteface_name}}" up
+
+- name: Install Ansible prerequisites
+  hosts: cloudinfra
+  gather_facts: false
+  user: root
+  roles:
+    - rpc_networking
+  tags:
+    - network
+    - vxlan
+  tasks:
+    - name: Include network config
+      lineinfile:
+        path: /etc/network/interfaces
+        state: present
+        line: "source /etc/network/interfaces.d/*.cfg"
+        regexp: "^source.*"
+
+    - name: restart networking
+      service:
+        name: networking
+        state: restarted
+
 - name: Setup infra1
   hosts: infra1
   tasks:
@@ -6,24 +86,24 @@
         repo: https://github.com/openstack/openstack-ansible.git
         dest: /opt/openstack-ansible
         version: "{{ openstack_ansible_version }}"
-    
+
     - name: Boostrap ansible
       shell: |
         ./scripts/bootstrap-ansible.sh
-      args: 
+      args:
         chdir: /opt/openstack-ansible
         creates: /etc/openstack_deploy
 
-    - name: Configure OSA logging in ansible.cfg
-      ini_file:
-        dest: /opt/openstack-ansible/playbooks/ansible.cfg
-        section: defaults
-        option: log_path
-        value: /root/deploy_ansible.log
-        backup: yes
-        state: present
-      tags: ansible_log
- 
+#    - name: Configure OSA logging in ansible.cfg
+#      ini_file:
+#        dest: /opt/openstack-ansible/playbooks/ansible.cfg
+#        section: defaults
+#        option: log_path
+#        value: /root/deploy_ansible.log
+#        backup: yes
+#        state: present
+#      tags: ansible_log
+
     - name: Get SSH pub file
       slurp:
         src: ~/.ssh/id_rsa.pub
@@ -41,52 +121,6 @@
         key: "{{ hostvars.infra1.ssh_pub.content  | b64decode  }}"
 
 
-- name: Set VXLAN interface 
-  hosts: cloudinfra
-  vars:
-    vxlan_inteface_name: vxlan100
-    vxlan_interface_id: 100
-    vxlan_interface_dstport: 4789
-    vxlan_interface_mtu: 1450
-  tasks: 
-  - debug: var=item
-    with_items: "{{ groups['cloudinfra'] | difference([inventory_hostname]) }}"
-  
-  - name: Create VXLAN device
-    shell: |
-       ip link add "{{vxlan_inteface_name}}" type vxlan id "{{vxlan_interface_id}}" dstport "{{vxlan_interface_dstport}}" local "{{hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address']}}" 
-       ip link set dev "{{vxlan_inteface_name}}" mtu "{{vxlan_interface_mtu}}"
-
-  - name: Add neighbours to VXLAN
-    shell: |
-       bridge fdb append 00:00:00:00:00:00 dev "{{vxlan_inteface_name}}" dst "{{hostvars[item]['ansible_eth1']['ipv4']['address']}}"
-    with_items: "{{ groups['cloudinfra'] | difference([inventory_hostname]) }}"
-
-  - name: Online intefaces
-    shell: |
-       ip link set  dev "{{vxlan_inteface_name}}" up 
-
-- name: Install Ansible prerequisites
-  hosts: cloudinfra
-  gather_facts: false
-  user: root
-  roles: 
-    - rpc_networking
-  tasks:
-    - name: Include network config
-      lineinfile:
-        path: /etc/network/interfaces
-        state: present
-        line: "source /etc/network/interfaces.d/*.cfg"
-        regexp: "^source.*"
-
-    - name: restart networking
-      service:
-        name: networking
-        state: restarted
-
-    - debug: var=hostvars[inventory_hostname]
-
 - name: Set L2 interface for flat network on compute node
   hosts: compute
   tasks:
@@ -96,8 +130,8 @@
         ip link set flat-nic  up
         brctl addif br-vlan br-vlan-veth
 
-- name: Install Ansible prerequisites
-  hosts: cloudinfra
+- name: Configure swap on infra nodes
+  hosts: infra
   gather_facts: false
   vars:
     swapfile_location: /openstack/swapfile
@@ -106,6 +140,14 @@
   roles:
     - kamaln7.swapfile
 
+- name: Configure swap on compute ans storage
+  hosts: compute,storage
+  gather_facts: false
+  vars:
+    swapfile_size: 4096MB
+  user: root
+  roles:
+    - kamaln7.swapfile
 
 - name: Install NFS server 
   hosts: storage
@@ -129,34 +171,6 @@
         group: 998
         owner: 998
 
-- name: Create filesystem 
-  hosts: infra
-  tags: volumes
-  tasks:
-    - filesystem:
-        fstype: xfs
-        dev: /dev/xvdb
-
-    - name: Mount up device
-      mount:
-        path: /openstack
-        src: /dev/xvdb
-        fstype: xfs
-        state: mounted
-
-    #- name: Create LXC dir for bind mount
-    #  file:
-    #    path: /openstack/lxc
-    #    state: directory
-    #    mode: 0755
-
-    - name: Mount bind 
-      mount:
-        path: /var/lib/lxc
-        src: /openstack/lxc
-        fstype: none
-        opts: bind
-        state: mounted
  
 - name: Openstack Setup hosts
   hosts: infra1
@@ -200,7 +214,11 @@
       args:
         chdir: /opt/openstack-ansible/playbooks
 
-
+- name: Openstack Setup hosts
+  hosts: infra1
+  tags:
+    - firewall
+  tasks:
     - name: Add rule for horizon
       iptables:
         chain: FORWARD

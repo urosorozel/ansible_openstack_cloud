@@ -10,7 +10,7 @@
           group: "{{ item.group }}"
           meta: "{{ item.meta }}"
           key_name: "{{ item.key_name }}"
-          wait: no
+          wait: yes
           auto_increment: False
       register: rax
       with_items: "{{ rax_servers }}"
