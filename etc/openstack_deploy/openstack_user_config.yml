@@ -3,6 +3,7 @@ cidr_networks:
   container: 172.29.236.0/22
   tunnel: 172.29.240.0/22
   storage: 172.29.244.0/22
+  flat: 172.29.248.0/22
 
 used_ips:
   - "172.29.236.1,172.29.236.60"
@@ -44,8 +45,11 @@ global_overrides:
         host_bind_override: "flat-nic"
         type: "flat"
         net_name: "flat"
+        ip_from_q: "flat"
         group_binds:
           - neutron_linuxbridge_agent
+          - ironic_conductor_container
+          - ironic_api_container
     - network:
         container_bridge: "br-vlan"
         container_type: "veth"
@@ -82,6 +86,23 @@ shared-infra_hosts:
 
 # repository (apt cache, python packages, etc)
 repo-infra_hosts:
+  infra1:
+    ip: 172.29.236.51
+  infra2:
+    ip: 172.29.236.52
+  infra3:
+    ip: 172.29.236.53
+
+# ironic
+ironic-infra_hosts:
+  infra1:
+    ip: 172.29.236.51
+  infra2:
+    ip: 172.29.236.52
+  infra3:
+    ip: 172.29.236.53
+
+ironic-compute_hosts:
   infra1:
     ip: 172.29.236.51
   infra2:

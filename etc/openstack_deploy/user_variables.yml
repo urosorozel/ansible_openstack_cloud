@@ -180,3 +180,5 @@ neutron_ml2_conf_ini_overrides:
 
 # Install tempest
 tempest_install: True
+
+ironic_tftp_server_address: "{{ container_networks.flat_address.address }}"
