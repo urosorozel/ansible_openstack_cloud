@@ -1,0 +1,47 @@
+---
+- name: Configure libvirt
+  hosts: compute
+  user: root
+  vars:
+    libvirt__group_map:
+      'Debian': 'libvirt'
+      'Ubuntu': 'libvirtd'
+      'Ubuntu': 'libvirt-qemu'
+    libvirt__connections:
+      'localhost':  'qemu:///system'
+    libvirt__pools:
+       - name: 'ironic_pool'
+         type: 'dir'
+         path: '/ironic_pool'
+         state: active
+
+  roles:
+    - role: debops.libvirt
+  tasks:
+
+#  - debug: var=ironic_nodes
+
+  - name: Install packages
+    apt:
+      name: virtinst
+      state: present
+
+  - name: Start Virtual machine
+    command: >
+      virt-install --name="{{ item.vm_name }}"
+                   --vcpus="{{ item.vm_cpu }}"
+                   --ram="{{ item.vm_memory }}"
+                   --description="libvirt VM"
+                   --boot="hd,network,menu=on"
+                   --controller="type=scsi"
+                   --noautoconsole
+                   --virt-type="{{ item.vm_virtualization }}"
+                   --os-type=linux
+      {% for dev in item.vm_block_device_list %}
+                   --disk pool="{{ item.vm_block_pool }},size={{ dev.block_size }},device=disk,sparse=true,format=qcow2"
+      {% endfor %}
+      {% for dev in item.vm_network_device_list %}
+                   --network bridge="{{ dev.host_net_dev }}{% if dev.host_net_mac is defined %},mac={{ dev.host_net_mac }}{% endif %},model=virtio"
+      {% endfor %}
+    with_items: "{{ ironic_nodes }}"
+    tags: create_ironic

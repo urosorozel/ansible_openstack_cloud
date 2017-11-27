@@ -1,5 +1,5 @@
 ---
-    openstack_ansible_version: 16.0.1
+    openstack_ansible_version: 16.0.3
     rpc_networking:
         template: interfaces-single.j2
         vip:

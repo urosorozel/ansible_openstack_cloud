@@ -3,17 +3,19 @@ cidr_networks:
   container: 172.29.236.0/22
   tunnel: 172.29.240.0/22
   storage: 172.29.244.0/22
-  flat: 172.29.248.0/22
+  swift: 172.29.248.0/22
+  flat: 172.29.252.0/22
 
 used_ips:
   - "172.29.236.1,172.29.236.60"
   - "172.29.240.1,172.29.240.60"
   - "172.29.244.1,172.29.244.60"
   - "172.29.248.1,172.29.248.60"
+  - "172.29.252.1,172.29.252.60"
 
 global_overrides:
   internal_lb_vip_address: 172.29.236.9
-  external_lb_vip_address: 172.29.232.55 
+  external_lb_vip_address: 172.29.232.55
   tunnel_bridge: "br-vxlan"
   management_bridge: "br-mgmt"
   provider_networks:
@@ -70,7 +72,22 @@ global_overrides:
           - cinder_api
           - cinder_volume
           - nova_compute
+          - swift_proxy
 
+  swift:
+    part_power: 12
+    storage_network: 'br-storage'
+    replication_network: 'br-swift'
+    drives:
+      - name: swift1.img
+      - name: swift2.img
+      - name: swift3.img
+    mount_point: /srv
+    storage_policies:
+      - policy:
+          name: default
+          index: 0
+          default: True
 ###
 ### Infrastructure
 ###
@@ -307,3 +324,19 @@ storage_hosts:
           shares:
             - ip: "172.29.244.55"
               share: "/volumes"
+
+swift-proxy_hosts:
+  infra1:
+    ip: 172.29.236.51
+  infra2:
+    ip: 172.29.236.52
+  infra3:
+    ip: 172.29.236.53
+
+swift_hosts:
+  infra1:
+    ip: 172.29.236.51
+  infra2:
+    ip: 172.29.236.52
+  infra3:
+    ip: 172.29.236.53

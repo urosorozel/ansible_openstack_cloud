@@ -2,17 +2,95 @@
   hosts: infra
   tags: volumes
   tasks:
+    - parted:
+        device: /dev/xvde
+        number: 1
+        state: absent
+
+    - parted:
+        device: /dev/xvde
+        number: 1
+        state: present
+        part_end: 74GB
+
+    - parted:
+        device: /dev/xvde
+        number: 2
+        state: present
+        part_start: 75GB
+        part_end: 100%
+
     - filesystem:
         fstype: ext4
         #force: yes
-        dev: /dev/xvdb
+        dev: /dev/xvde1
+
+    - filesystem:
+        fstype: ext4
+        #force: yes
+        dev: /dev/xvde2
+
+    - name: Mount up device
+      mount:
+        path: /var/lib/lxc
+        src: /dev/xvde1
+        fstype: ext4
+        state: mounted
 
     - name: Mount up device
       mount:
         path: /openstack
-        src: /dev/xvdb
+        src: /dev/xvde2
         fstype: ext4
         state: mounted
+
+- name: Create filesystem
+  hosts: infra
+  tags: swift_volumes
+  vars:
+    swift_mode: loop
+  tasks:
+    - name: Ensure '/openstack' directory exists
+      file:
+        dest: /openstack
+        state: directory
+
+    - name: Create sparse swift files
+      shell: "truncate -s 15G /openstack/{{ item }}.img"
+      args:
+        creates: "openstack/{{ item }}.img"
+      with_items:
+        - 'swift1'
+        - 'swift2'
+        - 'swift3'
+      register: swift_create
+      when: swift_mode == "loop"
+
+    - name: Format the (loop) swift files
+      filesystem:
+        fstype: xfs
+        dev: "/openstack/{{ item }}.img"
+      when: swift_create | changed
+      with_items:
+        - 'swift1'
+        - 'swift2'
+        - 'swift3'
+      when: swift_mode == "loop"
+
+    - name: Create the (loop) Swift mount points, fstab entries and mount the file systems
+      mount:
+        name: "/srv/{{ item }}.img"
+        src: "/openstack/{{ item }}.img"
+        fstype: xfs
+        opts: 'loop,noatime,nodiratime,nobarrier,logbufs=8,nofail'
+        passno: 0
+        dump: 0
+        state: mounted
+      with_items:
+        - 'swift1'
+        - 'swift2'
+        - 'swift3'
+      when: swift_mode == "loop"
 
     #- name: Create LXC dir for bind mount
     #  file:
@@ -135,14 +213,14 @@
   gather_facts: false
   vars:
     swapfile_location: /openstack/swapfile
-    swapfile_size: 16384MB
+    swapfile_size: 4096MB
   user: root
   roles:
     - kamaln7.swapfile
 
 - name: Configure swap on compute ans storage
   hosts: compute,storage
-  gather_facts: false
+  #gather_facts: false
   vars:
     swapfile_size: 4096MB
   user: root

@@ -7,7 +7,7 @@ rax_servers:
     volumes:
       - name: infra1_container_volume
         desc: "OS infra container volume"
-        size: 75
+        size: 100
         type: "SATA"
         device: /dev/xvdb
     meta:
@@ -23,7 +23,7 @@ rax_servers:
     volumes:
       - name: infra2_container_volume
         desc: "OS infra container volume"
-        size: 75
+        size: 100
         type: "SATA"
         device: /dev/xvdb
 
@@ -38,7 +38,7 @@ rax_servers:
     volumes:
       - name: infra3_container_volume
         desc: "OS infra container volume"
-        size: 75
+        size: 100
         type: "SATA"
         device: /dev/xvdb
 

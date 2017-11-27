@@ -1,36 +1,68 @@
----
-    rpc_networking:
-        template: interfaces-single.j2
-        vip:
-          interface: vxlan100
-          vlan: 5
-          address: 172.29.232.54
-          netmask: 255.255.252.0
-          mtu: 1450
-        mgmt:
-          interface: vxlan100
-          vlan: 10
-          address: 172.29.236.54
-          netmask: 255.255.252.0
-          mtu: 1450
-        vxlan:
-          interface: vxlan100
-          vlan: 20
-          address: 172.29.240.54
-          netmask: 255.255.252.0
-          mtu: 1450
-        vlan:
-          interface: vxlan100
-          mtu: 1450
-        storage:
-          interface: vxlan100
-          vlan: 30
-          address: 172.29.244.54
-          netmask: 255.255.252.0
-          mtu: 1450
-        swift:
-          interface: vxlan100
-          vlan: 40
-          address: 172.29.248.54
-          netmask: 255.255.252.0
-          mtu: 1450
+rpc_networking:
+    template: interfaces-single.j2
+    vip:
+      interface: vxlan100
+      vlan: 5
+      address: 172.29.232.54
+      netmask: 255.255.252.0
+      mtu: 1450
+    mgmt:
+      interface: vxlan100
+      vlan: 10
+      address: 172.29.236.54
+      netmask: 255.255.252.0
+      mtu: 1450
+    vxlan:
+      interface: vxlan100
+      vlan: 20
+      address: 172.29.240.54
+      netmask: 255.255.252.0
+      mtu: 1450
+    vlan:
+      interface: vxlan100
+      mtu: 1450
+    storage:
+      interface: vxlan100
+      vlan: 30
+      address: 172.29.244.54
+      netmask: 255.255.252.0
+      mtu: 1450
+    swift:
+      interface: vxlan100
+      vlan: 40
+      address: 172.29.248.54
+      netmask: 255.255.252.0
+      mtu: 1450
+
+vbmc_libvirt_uri: qemu:///system
+ironic_nodes:
+  - name: ironic1
+    vbmc: 10.20.10.105
+    vbmc_bridge: br-vlan
+    cpu: 1
+    memory: 2048
+    virtualization: qemu
+    fqdn: ironic1
+    block_pool: ironic_pool
+    network_device_list:
+    - device: eth0
+      host_net_dev: br-vlan
+      host_net_mac: 0c:c4:7a:b6:16:f1
+    block_device_list:
+    - device: sda
+      block_size: 10
+  - name: ironic2
+    vbmc: 10.20.10.106
+    vbmc_bridge: br-vlan
+    cpu: 1
+    memory: 2048
+    virtualization: qemu
+    fqdn: ironic2
+    block_pool: ironic_pool
+    network_device_list:
+    - device: eth0
+      host_net_dev: br-vlan
+      host_net_mac: 0c:c4:7a:b6:1f:f2
+    block_device_list:
+    - device: sda
+      block_size: 10

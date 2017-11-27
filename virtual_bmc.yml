@@ -1,0 +1,118 @@
+---
+- name: Configure libvirt
+  hosts: compute
+  user: root
+  tasks:
+    - name: Install VirtualBMC package
+      pip:
+        name: "virtualbmc"
+        extra_args: "--isolated"
+    
+    - name: Create VirtualBMC directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0750
+        owner: root
+        group: root
+      with_items:
+        - "/etc/virtualbmc"
+        - "/var/log/virtualbmc"
+    
+    - name: Create VirtualBMC configuration file
+      copy:
+        mode: 0750
+        dest: "/etc/virtualbmc/virtualbmc.conf"
+        content: |
+          [default]
+          config_dir=/root/.vbmc
+          [log]
+          logfile=/var/log/virtualbmc/virtualbmc.log
+          debug=True
+          [ipmi]
+          session_timout=20
+    
+    - name: Check vbmc IPs
+      shell: >
+        ip addr show {{ item.vbmc_bridge }} | grep {{ item.vbmc }} | wc -l
+      with_items: "{{ ironic_nodes }}"
+      register: vm_ip_result
+
+    - name: Create virtual IP's
+      command: >
+        ip addr add {{ item.item.vbmc }}/32 dev {{ item.item.vbmc_bridge }}
+      with_items: "{{ vm_ip_result.results }}"
+      when: item.stdout|int == 0
+
+    # the non_root_user id is not in the facts of the virthost when
+    # executed in devmode.  To be safe let's delegate to the virthost
+    # and obtain the uuid of the non_root_user
+    #- name: get virthost non_root_user userid
+    #  shell: id -u {{ non_root_user }}
+    #  register: non_root_user_uid
+    #  delegate_to: virthost
+    #
+    #- name: set fact on non_root_user_uid
+    #  set_fact:
+    #    non_root_user_uid: "{{ non_root_user_uid.stdout }}"
+    #
+    ## The first network defined with an address will be used for vbmc access.
+    #- name: set vbmc address if there is a (nat) network defined with an address
+    #  set_fact:
+    #    vbmc_address: "{{ networks|selectattr('address', 'defined')|map(attribute='address')|list|first }}"
+    #  when: networks|selectattr('address', 'defined')|map(attribute='name')|list|length > 0
+    #
+    ## If there is no nat network with an address, the undercloud will be
+    ## connected to the default libvirt network to fill this role.
+    #- name: set vbmc address fact for default libvirt network
+    #  set_fact:
+    #    vbmc_address: "{{ libvirt_default_network_address }}"
+    #  when: vbmc_address is not defined
+    #
+    ## The connection uri is slightly different when using qemu:///system
+    ## and requires the root user.
+    #- name: set qemu uri for qemu:///system usage
+    #  set_fact:
+    #    vbmc_libvirt_uri: "qemu+ssh://root@{{ vbmc_address }}/system?&keyfile=/root/.ssh/id_rsa_virt_power&no_verify=1&no_tty=1"
+    #  when: libvirt_uri == "qemu:///system"
+    #
+    #- name: set qemu uri for qemu:///session usage
+    #  set_fact:
+    #    vbmc_libvirt_uri: "qemu+ssh://{{ non_root_user }}@{{ vbmc_address }}/session?socket=/run/user/{{ non_root_user_uid }}/libvirt/libvirt-sock&keyfile=/root/.ssh/id_rsa_virt_power&no_verify=1&no_tty=1"
+    #  when: vbmc_libvirt_uri is not defined
+    
+    - name: Create the Virtual BMCs
+      command: "vbmc add --username ADMIN --password ADMIN --address={{ item.vbmc }} {{ item.name }}"
+      args:
+        creates: /root/.vbmc/{{ item.name }}/config
+      with_items: "{{ ironic_nodes }}"
+    
+    # TODO(lucasagomes): The service file should be included in the
+    #                    virtualbmc RPM package.
+    - name: Create the VirtualBMC systemd service
+      copy:
+        mode: 0664
+        dest: "/usr/lib/systemd/system/virtualbmc@.service"
+        content: |
+          [Unit]
+          Description=VirtualBMC %i service
+          After=network.target
+          [Service]
+          Type=forking
+          PIDFile=/root/.vbmc/%i/pid
+          ExecStart=/usr/local/bin/vbmc start %i
+          ExecStop=/usr/local/bin/vbmc stop %i
+          Restart=always
+          [Install]
+          WantedBy=multi-user.target
+   
+ 
+    - name: Start the Virtual BMCs
+      systemd:
+        name: "virtualbmc@{{ item.name }}"
+        state: started
+        daemon_reload: yes
+        enabled: true
+      with_items: "{{ ironic_nodes }}"
+    
+    

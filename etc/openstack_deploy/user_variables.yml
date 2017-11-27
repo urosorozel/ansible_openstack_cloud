@@ -182,3 +182,17 @@ neutron_ml2_conf_ini_overrides:
 tempest_install: True
 
 ironic_tftp_server_address: "{{ container_networks.flat_address.address }}"
+
+# Ironic conductor fail on keys tone auth plugin if this is not set
+ironic_openstack_api_url: http://{{internal_lb_vip_address}}:6385
+
+# Cleaning network for Ironic ( mapped to os_tempest public network name)
+ironic_neutron_cleaning_network_name: public
+
+# Ironic pxe stty0
+ironic_pxe_append_params: ipa-debug=1 systemd.journald.forward_to_console=yes console=tty0 console=ttyS0 coreos.autologin
+
+# Enable placement API
+nova_virt_types:
+  ironic:
+    nova_scheduler_use_baremetal_filters: False
