@@ -193,6 +193,4 @@ ironic_neutron_cleaning_network_name: public
 ironic_pxe_append_params: ipa-debug=1 systemd.journald.forward_to_console=yes console=tty0 console=ttyS0 coreos.autologin
 
 # Enable placement API
-nova_virt_types:
-  ironic:
-    nova_scheduler_use_baremetal_filters: False
+#nova_scheduler_use_baremetal_filters: False

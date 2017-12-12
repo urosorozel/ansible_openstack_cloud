@@ -28,19 +28,19 @@
 
   - name: Start Virtual machine
     command: >
-      virt-install --name="{{ item.vm_name }}"
-                   --vcpus="{{ item.vm_cpu }}"
-                   --ram="{{ item.vm_memory }}"
+      virt-install --name="{{ item.name }}"
+                   --vcpus="{{ item.cpu }}"
+                   --ram="{{ item.memory }}"
                    --description="libvirt VM"
                    --boot="hd,network,menu=on"
                    --controller="type=scsi"
                    --noautoconsole
-                   --virt-type="{{ item.vm_virtualization }}"
+                   --virt-type="{{ item.virtualization }}"
                    --os-type=linux
-      {% for dev in item.vm_block_device_list %}
-                   --disk pool="{{ item.vm_block_pool }},size={{ dev.block_size }},device=disk,sparse=true,format=qcow2"
+      {% for dev in item.block_device_list %}
+                   --disk pool="{{ item.block_pool }},size={{ dev.block_size }},device=disk,sparse=true,format=qcow2"
       {% endfor %}
-      {% for dev in item.vm_network_device_list %}
+      {% for dev in item.network_device_list %}
                    --network bridge="{{ dev.host_net_dev }}{% if dev.host_net_mac is defined %},mac={{ dev.host_net_mac }}{% endif %},model=virtio"
       {% endfor %}
     with_items: "{{ ironic_nodes }}"

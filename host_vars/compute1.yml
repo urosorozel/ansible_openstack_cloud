@@ -35,9 +35,12 @@ rpc_networking:
       mtu: 1450
 
 vbmc_libvirt_uri: qemu:///system
+ipmi_br_vlan_vip:  172.29.252.1
+vbmc_bridge: br-vlan
+
 ironic_nodes:
   - name: ironic1
-    vbmc: 10.20.10.105
+    vbmc: 172.29.252.20 
     vbmc_bridge: br-vlan
     cpu: 1
     memory: 2048
@@ -52,7 +55,7 @@ ironic_nodes:
     - device: sda
       block_size: 10
   - name: ironic2
-    vbmc: 10.20.10.106
+    vbmc: 172.29.252.21
     vbmc_bridge: br-vlan
     cpu: 1
     memory: 2048
@@ -62,7 +65,7 @@ ironic_nodes:
     network_device_list:
     - device: eth0
       host_net_dev: br-vlan
-      host_net_mac: 0c:c4:7a:b6:1f:f2
+      host_net_mac: 0c:c4:7a:b6:16:f2
     block_device_list:
     - device: sda
       block_size: 10
