@@ -1,3 +1,15 @@
+libvirt__group_map:
+  'Debian': 'libvirt'
+  'Ubuntu': 'libvirtd'
+  'Ubuntu': 'libvirt-qemu'
+libvirt__connections:
+  'localhost':  'qemu:///system'
+libvirt__pools:
+   - name: 'ironic_pool'
+     type: 'dir'
+     path: '/ironic_pool'
+     state: active
+
 rpc_networking:
     template: interfaces-single.j2
     vip:

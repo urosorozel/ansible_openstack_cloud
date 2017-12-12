@@ -72,4 +72,4 @@ done
 
 # boot
 # nova boot --flavor baremetal-flavor --image cirros-0.3.5-x86_64-disk.img --nic net-name=public baremetal
-# nova boot --flavor virtual-flavor --image cirros-0.3.5-x86_64-disk.img --nic net-name=public virtual
+# nova boot --flavor virtual-flavor --security-groups server_ssh_icmp --image cirros-0.3.5-x86_64-disk.img --nic net-name=public virtual

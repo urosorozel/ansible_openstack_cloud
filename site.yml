@@ -294,7 +294,7 @@
         chdir: /opt/openstack-ansible/playbooks
 
 - name: Openstack Setup hosts
-  hosts: infra1
+  hosts: infra
   tags:
     - firewall
   tasks:
@@ -326,10 +326,19 @@
         to_destination: 172.29.232.55
         jump: DNAT
 
+    # rp_filter disabled to be able to route from br-vlan and br-vip
+    - name: Add secondary ip from flat range
+      shell: |
+        ip addr add "{{ironic_network}}" dev br-vlan
+        echo 2 > /proc/sys/net/ipv4/conf/default/rp_filter
+        echo 2 > /proc/sys/net/ipv4/conf/all/rp_filter
+
 - name: Add root user to libvirt-qemu group on compute node for virt-install
   hosts: compute
   tags:
     - bmc
+  roles:
+    - role: debops.libvirt
   tasks:
     - name: Add root to group libvirt-qemu for libvirt role to work
       user:
@@ -338,4 +347,5 @@
         append: yes
 
     # Configure virtual bmc
+    - include: create_ironic.yml
     - include: virtual_bmc.yml

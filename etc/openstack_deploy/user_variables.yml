@@ -179,7 +179,7 @@ neutron_ml2_conf_ini_overrides:
   global_physnet_mtu: 1300
 
 # Install tempest
-tempest_install: True
+#tempest_install: True
 
 ironic_tftp_server_address: "{{ container_networks.flat_address.address }}"
 

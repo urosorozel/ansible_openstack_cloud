@@ -1,26 +1,3 @@
----
-- name: Configure libvirt
-  hosts: compute
-  user: root
-  vars:
-    libvirt__group_map:
-      'Debian': 'libvirt'
-      'Ubuntu': 'libvirtd'
-      'Ubuntu': 'libvirt-qemu'
-    libvirt__connections:
-      'localhost':  'qemu:///system'
-    libvirt__pools:
-       - name: 'ironic_pool'
-         type: 'dir'
-         path: '/ironic_pool'
-         state: active
-
-  roles:
-    - role: debops.libvirt
-  tasks:
-
-#  - debug: var=ironic_nodes
-
   - name: Install packages
     apt:
       name: virtinst

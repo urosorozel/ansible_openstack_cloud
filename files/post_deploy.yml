@@ -28,6 +28,10 @@
         name: virtualenv
         extra_args: --isolated
 
+    - name: pip install shade for ansible openstack module support
+      pip:
+        name: shade
+
     - name: Install requirements for enroll script
       pip:
         requirements: /root/requirements.txt
@@ -104,6 +108,12 @@
   hosts: utility_container[0]
   tags: ironic_aggregate
   tasks:
+    - name: Update openrc for ironic API
+      shell: |
+        echo "# Define ironic API to support resource classes" >> /root/openrc 
+        echo "export IRONIC_API_VERSION=latest" >> /root/openrc
+        echo "export OS_BAREMETAL_API_VERSION=1.34" >> /root/openrc
+
     - name: Get ironic hosts for baremetal server aggregate
       shell: |
         . /root/openrc;openstack host list| grep internal | grep ironic-compute | awk '{ print $2}'
@@ -222,11 +232,12 @@
         protocol: icmp
         remote_ip_prefix: 0.0.0.0/0
 
+
 - name: Post deploy
   hosts: utility_container[0]
   tasks:
     - name: Run post_deploy.sh
       shell: |
-        bash -x post_deploy.sh
+        bash post_deploy.sh
       args:
         chdir: /root/

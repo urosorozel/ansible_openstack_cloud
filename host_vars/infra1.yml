@@ -1,5 +1,6 @@
 ---
-    openstack_ansible_version: 16.0.3
+    openstack_ansible_version: 16.0.5
+    ironic_network: 172.29.252.58/22
     rpc_networking:
         template: interfaces-single.j2
         vip:
