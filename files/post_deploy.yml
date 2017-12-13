@@ -82,7 +82,7 @@
         section: filter_scheduler
         option: enabled_filters
         value: 'AggregateInstanceExtraSpecsFilter,RetryFilter,AvailabilityZoneFilter,RamFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter,ServerGroupAntiAffinityFilter,ServerGroupAffinityFilter,AggregateCoreFilter,AggregateDiskFilter'
-        path: /etc/nova/nova.conf"
+        path: /etc/nova/nova.conf
 
     - name: "Restart nova scheduler"
       service:
@@ -97,7 +97,7 @@
         section: filter_scheduler
         option: enabled_filters
         value: 'AggregateInstanceExtraSpecsFilter,RetryFilter,AvailabilityZoneFilter,RamFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter,ServerGroupAntiAffinityFilter,ServerGroupAffinityFilter,AggregateCoreFilter,AggregateDiskFilter'
-        path: /etc/nova/nova.conf"
+        path: /etc/nova/nova.conf
 
     - name: "Restart nova scheduler"
       service:
