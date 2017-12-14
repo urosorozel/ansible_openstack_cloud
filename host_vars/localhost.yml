@@ -11,7 +11,9 @@ rax_servers:
         type: "SATA"
         device: /dev/xvdb
     meta:
-      groups: cloudinfra
+      groups:
+        - cloudinfra
+        - infra_one
 
   - name: infra2
     flavor: io1-15

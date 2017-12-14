@@ -1,5 +1,5 @@
 - name: Change runinng deploy config
-  hosts: infra1
+  hosts: infra_one
   tasks:
     - name: Copy post deploy play to infra1 node
       copy:

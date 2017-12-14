@@ -157,7 +157,7 @@
         state: restarted
 
 - name: Setup infra1
-  hosts: infra1
+  hosts: infra_one
   tasks:
     - name: Get Openstack ansible from git
       git:
@@ -191,12 +191,15 @@
 - name: SSH keys
   hosts: cloudinfra
   tasks:
+    # Set infra_one hostname
+    - set_fact:
+        first_infra: "{{ groups.infra_one[0]}}"
 
     - name: Set authorized key for user root  copying it from ssh_pub var
       authorized_key:
         user: root
         state: present
-        key: "{{ hostvars.infra1.ssh_pub.content  | b64decode  }}"
+        key: "{{ hostvars[first_infra].ssh_pub.content  | b64decode  }}"
 
 
 - name: Set L2 interface for flat network on compute node
@@ -252,7 +255,9 @@
 
  
 - name: Openstack Setup hosts
-  hosts: infra1
+  hosts: infra_one
+  tags:
+    - setup_openstack
   tasks:
     - name: Copy Openstack ansible config to infra1
       copy:
@@ -339,13 +344,13 @@
     - bmc
   roles:
     - role: debops.libvirt
-  tasks:
+  pre_tasks: 
     - name: Add root to group libvirt-qemu for libvirt role to work
       user:
         name: root
         groups: libvirt-qemu
         append: yes
-
+  tasks:
     # Configure virtual bmc
     - include: create_ironic.yml
     - include: virtual_bmc.yml
